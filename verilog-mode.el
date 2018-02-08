@@ -5593,8 +5593,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                    (if (and
                         verilog-indent-lists
                         (verilog-in-paren)
-                        (not (verilog-in-coverage-p))
-                        )
+                        (not (verilog-in-coverage-p)))
                        (progn (setq par 1)
                               (throw 'nesting 'block)))
 
@@ -5607,9 +5606,8 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                               (or (not (verilog-in-coverage-p))
                                   (looking-at verilog-in-constraint-re) ))  ; may still get hosed if concat in constraint
                          (let ((sp (point)))
-                           (if (and
-                                (not (looking-at verilog-complete-reg))
-                                (verilog-continued-line-1 lim))
+                           (if (and (not (looking-at verilog-complete-reg))
+                                    (verilog-continued-line-1 lim))
                                (progn (goto-char sp)
                                       (throw 'nesting 'cexp))
 
@@ -6171,10 +6169,46 @@ Set point to where line starts."
          ((= (preceding-char) ?\`)
           (backward-char)
           t)
-
          (t
           (goto-char back)
           t))))))))
+
+(defun verilog-assign-statement-p ()
+  "Seach assign statement line"
+  (unless (verilog-in-comment-or-string-p)
+    (beginning-of-line)
+    (looking-at "^\\s-*assign\\s-+")))
+
+(defun verilog-align-assign ()
+  "Align the assert statements"
+  (interactive)
+  (let* ((start (save-excursion
+                  (beginning-of-line)
+                  (setq start (point))
+                  (while (progn (forward-line -1)
+                                (verilog-assign-statement-p))
+                    (setq start (point)))
+                  start))
+         (end (save-excursion
+                (end-of-line)
+                (setq end (point))
+                (while (progn (forward-line 1)
+                              (verilog-assign-statement-p))
+                  (end-of-line)
+                  (setq end (point)))
+                end))
+         (assign-regex "^\\(.*\\)\\s-*\\(=\\)\\s-*")
+         (ind (verilog-get-lineup-indent-2  assign-regex start end)))
+    (message "start: %d, end: %d, ind: %d" start end ind)
+    (goto-char start)
+    (while (and (> end (point))
+                (looking-at assign-regex))
+      (goto-char (match-beginning 2))
+      (just-one-space)
+      (beginning-of-line)
+      (looking-at assign-regex)
+      (goto-char (match-beginning 2))
+      (indent-to ind))))
 
 (defun verilog-backward-syntactic-ws ()
   "Move backwards putting point after first non-whitespace non-comment."
@@ -6699,21 +6733,32 @@ Only look at a few lines to determine indent level."
 
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
-      (let* ( here
-              (val (save-excursion
-                     (verilog-backward-up-list 1)
-                     (forward-char 1)
-                     (if verilog-indent-lists
-                         (skip-chars-forward " \t")
-                       (verilog-forward-syntactic-ws))
+      (let* (here
+             (current-depth (verilog-in-paren-count))
+             (next-depth (save-excursion
+                           (forward-char 1)
+                           (verilog-in-paren-count)))
+             (val (save-excursion
+                    (verilog-backward-up-list 1)
+                    (forward-char 1)
+                    (if verilog-indent-lists
+                        (progn (skip-chars-forward " \t")
+                               (setq here (point))
+                               (if (> current-depth next-depth) ; End of parentheses, indent 1 level less
+                                   (progn (back-to-indentation)
+                                          (current-column))
+                                 (progn (if (eolp) ; first list item start from next line, +1 level on before list indentation
+                                            (progn (back-to-indentation)
+                                                   (+ (1- verilog-indent-level) (current-column)))
+                                          (current-column)))))
+                      (progn (verilog-forward-syntactic-ws)
+                             (setq here (point))
+                             (current-column)))))
+             (decl (save-excursion
+                     (goto-char here)
+                     (verilog-forward-syntactic-ws)
                      (setq here (point))
-                     (current-column)))
-
-              (decl (save-excursion
-                      (goto-char here)
-                      (verilog-forward-syntactic-ws)
-                      (setq here (point))
-                      (looking-at verilog-declaration-re))))
+                     (looking-at verilog-declaration-re))))
         (indent-line-to val)
         (if decl
             (verilog-pretty-declarations-auto))))
@@ -13462,11 +13507,11 @@ Typing \\[verilog-auto] will make this into:
         // verilator lint_off UNUSED
         wire _unused_ok = &{1\\='b0,
                             /*AUTOUNUSED*/
-			    // Beginning of automatics
-			    unused_input_a,
-			    unused_input_b,
-			    unused_input_c,
-			    // End of automatics
+          // Beginning of automatics
+          unused_input_a,
+          unused_input_b,
+          unused_input_c,
+          // End of automatics
                             1\\='b0};
         // verilator lint_on  UNUSED
     endmodule"
