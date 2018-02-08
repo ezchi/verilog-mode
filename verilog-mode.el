@@ -5625,7 +5625,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                                  (beginning-of-line)
                                  (skip-chars-forward " \t")
                                  (throw 'nesting 'statement))
-                             (progn
+                             (forward-line)
+                             (if (looking-at "^\\s-*import\\s-+")
+                                 (throw 'nesting 'defun)
                                (throw 'nesting 'cexp))))
                        ;; not a continued line
                        (goto-char starting_position))
@@ -6208,7 +6210,8 @@ Set point to where line starts."
       (beginning-of-line)
       (looking-at assign-regex)
       (goto-char (match-beginning 2))
-      (indent-to ind))))
+      (indent-to ind)
+      (forward-line))))
 
 (defun verilog-backward-syntactic-ws ()
   "Move backwards putting point after first non-whitespace non-comment."
@@ -7055,88 +7058,90 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
       (let ((regexp (concat "^\\s-*" verilog-complete-reg))
             (regexp1 (concat "^\\s-*" verilog-basic-complete-re)))
         (beginning-of-line)
-        (when (and (not (looking-at regexp))
-                   (looking-at verilog-assignment-operation-re)
-                   (save-excursion
-                     (goto-char (match-end 2))
-                     (and (not (verilog-in-attribute-p))
-                          (not (verilog-in-parameter-p))
-                          (not (verilog-in-comment-or-string-p)))))
-          (let* ((start (save-excursion ; BOL of the first line of the assignment block
-                          (beginning-of-line)
-                          (let ((pt (point)))
-                            (verilog-backward-syntactic-ws)
+        (if (verilog-assign-statement-p)
+            (verilog-align-assign)
+          (when (and (not (looking-at regexp))
+                     (looking-at verilog-assignment-operation-re)
+                     (save-excursion
+                       (goto-char (match-end 2))
+                       (and (not (verilog-in-attribute-p))
+                            (not (verilog-in-parameter-p))
+                            (not (verilog-in-comment-or-string-p)))))
+            (let* ((start (save-excursion ; BOL of the first line of the assignment block
                             (beginning-of-line)
-                            (while (and (not (looking-at regexp1))
-                                        (looking-at verilog-assignment-operation-re)
-                                        (not (bobp)))
-                              (setq pt (point))
+                            (let ((pt (point)))
                               (verilog-backward-syntactic-ws)
-                              (beginning-of-line)) ; Ack, need to grok `define
-                            pt)))
-                 (end (save-excursion ; EOL of the last line of the assignment block
-                        (end-of-line)
-                        (let ((pt (point))) ; Might be on last line
-                          (verilog-forward-syntactic-ws)
-                          (beginning-of-line)
-                          (while (and
-                                  (not (looking-at regexp1))
-                                  (looking-at verilog-assignment-operation-re)
-                                  (progn
-                                    (end-of-line)
-                                    (not (eq pt (point)))))
-                            (setq pt (point))
+                              (beginning-of-line)
+                              (while (and (not (looking-at regexp1))
+                                          (looking-at verilog-assignment-operation-re)
+                                          (not (bobp)))
+                                (setq pt (point))
+                                (verilog-backward-syntactic-ws)
+                                (beginning-of-line)) ; Ack, need to grok `define
+                              pt)))
+                   (end (save-excursion ; EOL of the last line of the assignment block
+                          (end-of-line)
+                          (let ((pt (point))) ; Might be on last line
                             (verilog-forward-syntactic-ws)
-                            (beginning-of-line))
-                          pt)))
-                 (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end)))
-                 (endmark (set-marker (make-marker) end)))
-            (goto-char start)
-            (verilog-do-indent (verilog-calculate-indent))
-            (when (and (not quiet)
-                       (> (- end start) 100))
-              (message "Lining up expressions.. (please stand by)"))
-
-            ;; Set indent to minimum throughout region
-            ;; Rely on mark rather than on point as the indentation changes can
-            ;; make the older point reference obsolete
-            (while (< (point) (marker-position endmark))
-              (beginning-of-line)
-              (save-excursion
-                (verilog-just-one-space verilog-assignment-operation-re))
-              (verilog-do-indent (verilog-calculate-indent))
-              (end-of-line)
-              (verilog-forward-syntactic-ws))
-
-            (let ((ind (verilog-get-lineup-indent-2 verilog-assignment-operation-re start (marker-position endmark))) ; Find the biggest prefix
-                  e)
-              ;; Now indent each line.
+                            (beginning-of-line)
+                            (while (and
+                                    (not (looking-at regexp1))
+                                    (looking-at verilog-assignment-operation-re)
+                                    (progn
+                                      (end-of-line)
+                                      (not (eq pt (point)))))
+                              (setq pt (point))
+                              (verilog-forward-syntactic-ws)
+                              (beginning-of-line))
+                            pt)))
+                   (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end)))
+                   (endmark (set-marker (make-marker) end)))
               (goto-char start)
-              (while (progn
-                       (setq e (marker-position endmark))
-                       (> e (point)))
+              (verilog-do-indent (verilog-calculate-indent))
+              (when (and (not quiet)
+                         (> (- end start) 100))
+                (message "Lining up expressions.. (please stand by)"))
+
+              ;; Set indent to minimum throughout region
+              ;; Rely on mark rather than on point as the indentation changes can
+              ;; make the older point reference obsolete
+              (while (< (point) (marker-position endmark))
+                (beginning-of-line)
+                (save-excursion
+                  (verilog-just-one-space verilog-assignment-operation-re))
+                (verilog-do-indent (verilog-calculate-indent))
+                (end-of-line)
+                (verilog-forward-syntactic-ws))
+
+              (let ((ind (verilog-get-lineup-indent-2 verilog-assignment-operation-re start (marker-position endmark))) ; Find the biggest prefix
+                    e)
+                ;; Now indent each line.
+                (goto-char start)
+                (while (progn
+                         (setq e (marker-position endmark))
+                         (> e (point)))
+                  (unless quiet
+                    (message " verilog-pretty-expr: %d" (- e (point))))
+                  (setq e (point))
+                  (cond
+                   ((looking-at verilog-assignment-operation-re)
+                    (goto-char (match-beginning 2))
+                    (unless (or (verilog-in-parenthesis-p) ; Leave attributes and comparisons alone
+                                (verilog-in-coverage-p))
+                      (if (and contains-2-char-operator
+                               (eq (char-after) ?=))
+                          (indent-to (1+ ind)) ; Line up the = of the <= with surrounding =
+                        (indent-to ind))))
+                   ((verilog-continued-line-1 start)
+                    (goto-char e)
+                    (indent-line-to ind))
+                   (t                     ; Must be comment or white space
+                    (goto-char e)
+                    (verilog-forward-ws&directives)
+                    (forward-line -1)))
+                  (forward-line 1))
                 (unless quiet
-                  (message " verilog-pretty-expr: %d" (- e (point))))
-                (setq e (point))
-                (cond
-                 ((looking-at verilog-assignment-operation-re)
-                  (goto-char (match-beginning 2))
-                  (unless (or (verilog-in-parenthesis-p) ; Leave attributes and comparisons alone
-                              (verilog-in-coverage-p))
-                    (if (and contains-2-char-operator
-                             (eq (char-after) ?=))
-                        (indent-to (1+ ind)) ; Line up the = of the <= with surrounding =
-                      (indent-to ind))))
-                 ((verilog-continued-line-1 start)
-                  (goto-char e)
-                  (indent-line-to ind))
-                 (t                     ; Must be comment or white space
-                  (goto-char e)
-                  (verilog-forward-ws&directives)
-                  (forward-line -1)))
-                (forward-line 1))
-              (unless quiet
-                (message "")))))))))
+                  (message ""))))))))))
 
 (defun verilog-just-one-space (myre)
   "Remove extra spaces around regular expression MYRE."
