@@ -6199,7 +6199,7 @@ Set point to where line starts."
                   (end-of-line)
                   (setq end (point)))
                 end))
-         (assign-regex "^\\(.*\\)\\s-*\\(=\\)\\s-*")
+         (assign-regex "^\\(.*\\)\\s-+\\(=\\)\\s-+")
          (ind (verilog-get-lineup-indent-2  assign-regex start end)))
     (message "start: %d, end: %d, ind: %d" start end ind)
     (goto-char start)
