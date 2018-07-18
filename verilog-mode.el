@@ -9581,12 +9581,12 @@ warning message, you need to add to your init file:
             (error "%s: Can't find verilog-read-defines file: %s"
                    (verilog-point-text) filename))))
       (when recurse
-        (goto-char (point-min))
-        (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-          (let ((inc (verilog-string-replace-matches
-                      "\"" "" nil nil (match-string-no-properties 1))))
-            (unless (verilog-inside-comment-or-string-p)
-              (verilog-read-defines inc recurse t)))))
+	      (goto-char (point-min))
+	      (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
+	        (let ((inc (verilog-substitute-include-name
+                      (match-string-no-properties 1))))
+	          (unless (verilog-inside-comment-or-string-p)
+	            (verilog-read-defines inc recurse t)))))
       ;; Read `defines
       ;; note we don't use verilog-re... it's faster this way, and that
       ;; function has problems when comments are at the end of the define
@@ -9656,8 +9656,8 @@ foo.v (an include file):
     (verilog-getopt-flags)
     (goto-char (point-min))
     (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-      (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
-        (verilog-read-defines inc nil t)))))
+      (let ((inc (verilog-substitute-include-name (match-string 1))))
+	      (verilog-read-defines inc nil t)))))
 
 (defun verilog-read-signals (&optional start end)
   "Return a simple list of all possible signals in the file.
@@ -9807,6 +9807,12 @@ Use DEFAULT-DIR to anchor paths if non-nil."
   (if default-dir
       (expand-file-name (substitute-in-file-name filename) default-dir)
     (substitute-in-file-name filename)))
+
+(defun verilog-substitute-include-name (filename)
+  "Return FILENAME for include with define substituted."
+  (setq filename (verilog-string-replace-matches "\"" "" nil nil filename))
+  (verilog-string-replace-matches "\"" "" nil nil
+                                  (verilog-symbol-detick filename t)))
 
 (defun verilog-add-list-unique (varref object)
   "Append to VARREF list the given OBJECT,
