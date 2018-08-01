@@ -5632,6 +5632,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                              (forward-line)
                              (if (looking-at "^\\s-*import\\s-+")
                                  (throw 'nesting 'defun)
+                               (forward-line -1)
                                (throw 'nesting 'cexp))))
                        ;; not a continued line
                        (goto-char starting_position))
