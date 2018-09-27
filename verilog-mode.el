@@ -1,5 +1,3 @@
-;;; -*- lexical-binding: t; -*-
-
 ;;; verilog-mode.el --- major mode for editing verilog source in Emacs
 
 ;; Copyright (C) 1996-2018 Free Software Foundation, Inc.
