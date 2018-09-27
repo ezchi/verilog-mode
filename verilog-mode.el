@@ -2430,7 +2430,7 @@ find the errors."
        ;; distribution weighting
        ":=" ":/"
        ) 't
-         )))
+     )))
 (defconst verilog-assignment-operation-re
   (concat
    ;; "\\(^\\s-*[A-Za-z0-9_]+\\(\\[\\([A-Za-z0-9_]+\\)\\]\\)*\\s-*\\)"
@@ -2732,6 +2732,8 @@ find the errors."
        "localparam" "parameter" "var"
        ;; type creation
        "typedef"
+       ;; randomness
+       "rand"
        ))))
 (defconst verilog-declaration-core-re
   (eval-when-compile
@@ -4178,6 +4180,7 @@ With optional ARG, remove existing end of line comments."
 To call this from the command line, see \\[verilog-batch-indent]."
   (interactive)
   (verilog-mode)
+  (verilog-auto-reeval-locals)
   (indent-region (point-min) (point-max) nil))
 
 (defun verilog-insert-block ()
@@ -6465,7 +6468,7 @@ Return >0 for nested struct."
                        (equal (char-before) ?\;)
                        (equal (char-before) ?\}))
                    ;; skip what looks like bus repetition operator {#{
-                   (not (string-match "^{\\s-*[0-9]+\\s-*{" (buffer-substring p (point)))))))))
+                   (not (string-match "^{\\s-*[0-9a-zA-Z_]+\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
           (verilog-backward-ws&directives)
@@ -9192,7 +9195,7 @@ Must call `verilog-read-auto-lisp-present' before this function."
   "Recursive routine for parentheses/bracket matching.
 EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
-IGNORE-NEXT is true to ignore next token, fake from inside case statement."
+TEMP-NEXT is true to ignore next token, fake from inside case statement."
   (let* ((semi-rvalue (equal "endcase" exit-keywd))  ; true if after a ; we are looking for rvalue
          keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-list end-else-check
          ignore-next)
@@ -9231,7 +9234,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
             ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
             (setq gotend t))
            ;; Final statement?
-           ((and exit-keywd (and (equal keywd exit-keywd)
+           ((and exit-keywd (and (or (equal keywd exit-keywd)
+                                     (and (equal exit-keywd "'}")
+                                          (equal keywd "}")))
                                  (not (looking-at "::"))))
             (setq gotend t)
             (forward-char (length keywd)))
@@ -9244,9 +9249,13 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
               (setq end-else-check t))
             (forward-char 1))
            ((equal keywd "'")
-            (if (looking-at "'[sS]?[hdxboHDXBO]?[ \t]*[0-9a-fA-F_xzXZ?]+")
-                (goto-char (match-end 0))
-              (forward-char 1)))
+            (cond ((looking-at "'[sS]?[hdxboHDXBO]?[ \t]*[0-9a-fA-F_xzXZ?]+")
+                   (goto-char (match-end 0)))
+                  ((looking-at "'{")
+                   (forward-char 2)
+                   (verilog-read-always-signals-recurse "'}" t nil))
+                  (t
+                   (forward-char 1))))
            ((equal keywd ":")  ; Case statement, begin/end label, x?y:z
             (cond ((looking-at "::")
                    (forward-char 1))  ; Another forward-char below
@@ -9255,6 +9264,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
                   ((equal "?" exit-keywd)  ; x?y:z rvalue
                    )  ; NOP
                   ((equal "]" exit-keywd)  ; [x:y] rvalue
+                   )  ; NOP
+                  ((equal "'}" exit-keywd)  ; Pattern assignment
                    )  ; NOP
                   (got-sig  ; label: statement
                    (setq ignore-next nil rvalue semi-rvalue got-sig nil))
@@ -9582,12 +9593,12 @@ warning message, you need to add to your init file:
             (error "%s: Can't find verilog-read-defines file: %s"
                    (verilog-point-text) filename))))
       (when recurse
-	      (goto-char (point-min))
-	      (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-	        (let ((inc (verilog-substitute-include-name
+        (goto-char (point-min))
+        (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
+          (let ((inc (verilog-substitute-include-name
                       (match-string-no-properties 1))))
-	          (unless (verilog-inside-comment-or-string-p)
-	            (verilog-read-defines inc recurse t)))))
+            (unless (verilog-inside-comment-or-string-p)
+              (verilog-read-defines inc recurse t)))))
       ;; Read `defines
       ;; note we don't use verilog-re... it's faster this way, and that
       ;; function has problems when comments are at the end of the define
@@ -9658,7 +9669,7 @@ foo.v (an include file):
     (goto-char (point-min))
     (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
       (let ((inc (verilog-substitute-include-name (match-string 1))))
-	      (verilog-read-defines inc nil t)))))
+        (verilog-read-defines inc nil t)))))
 
 (defun verilog-read-signals (&optional start end)
   "Return a simple list of all possible signals in the file.
@@ -9808,6 +9819,12 @@ Use DEFAULT-DIR to anchor paths if non-nil."
   (if default-dir
       (expand-file-name (substitute-in-file-name filename) default-dir)
     (substitute-in-file-name filename)))
+
+(defun verilog-substitute-include-name (filename)
+  "Return FILENAME for include with define substituted."
+  (setq filename (verilog-string-replace-matches "\"" "" nil nil filename))
+  (verilog-string-replace-matches "\"" "" nil nil
+                                  (verilog-symbol-detick filename t)))
 
 (defun verilog-substitute-include-name (filename)
   "Return FILENAME for include with define substituted."
@@ -10601,67 +10618,95 @@ This repairs those mis-inserted by an AUTOARG."
   "Return a simplified range expression with constants eliminated from EXPR."
   ;; Note this is always called with brackets; ie [z] or [z:z]
   (if (or (not verilog-auto-simplify-expressions)
-          (not (string-match "[---+*()]" expr)))
+          (not (string-match "[---+*/<>()]" expr)))
       expr  ; disabled or short-circuited
     (let ((out expr)
           (last-pass ""))
       (while (not (equal last-pass out))
-        (setq last-pass out)
-        ;; Prefix regexp needs beginning of match, or some symbol of
-        ;; lesser or equal precedence.  We assume the [:]'s exist in expr.
-        ;; Ditto the end.
-        (while (string-match
-                (concat "\\([[({:*+-]\\)"  ; - must be last
-                        "(\\<\\([0-9A-Za-z_]+\\))"
-                        "\\([])}:*+-]\\)")
-                out)
-          (setq out (replace-match "\\1\\2\\3" nil nil out)))
-        (while (string-match
-                (concat "\\([[({:*+-]\\)"  ; - must be last
-                        "\\$clog2\\s *(\\<\\([0-9]+\\))"
-                        "\\([])}:*+-]\\)")
-                out)
-          (setq out (replace-match
-                     (concat
-                      (match-string 1 out)
-                      (int-to-string (verilog-clog2 (string-to-number (match-string 2 out))))
-                      (match-string 3 out))
-                     nil nil out)))
-        ;; For precedence do * before +/-
-        (while (string-match
-                (concat "\\([[({:*+-]\\)"
-                        "\\([0-9]+\\)\\s *\\([*]\\)\\s *\\([0-9]+\\)"
-                        "\\([])}:*+-]\\)")
-                out)
-          (setq out (replace-match
-                     (concat (match-string 1 out)
-                             (int-to-string (* (string-to-number (match-string 2 out))
-                                               (string-to-number (match-string 4 out))))
-                             (match-string 5 out))
-                     nil nil out)))
-        (while (string-match
-                (concat "\\([[({:+-]\\)" ; No * here as higher prec
-                        "\\([0-9]+\\)\\s *\\([---+]\\)\\s *\\([0-9]+\\)"
-                        "\\([])}:+-]\\)")
-                out)
-          (let ((pre (match-string 1 out))
-                (lhs (string-to-number (match-string 2 out)))
-                (rhs (string-to-number (match-string 4 out)))
-                (post (match-string 5 out))
-                val)
-            (when (equal pre "-")
-              (setq lhs (- lhs)))
-            (setq val (if (equal (match-string 3 out) "-")
-                          (- lhs rhs)
-                        (+ lhs rhs))
-                  out (replace-match
-                       (concat (if (and (equal pre "-")
-                                        (< val 0))
-                                   ""  ; Not "--20" but just "-20"
-                                 pre)
-                               (int-to-string val)
-                               post)
-                       nil nil out)) )))
+        (while (not (equal last-pass out))
+          (setq last-pass out)
+          ;; Prefix regexp needs beginning of match, or some symbol of
+          ;; lesser or equal precedence.  We assume the [:]'s exist in expr.
+          ;; Ditto the end.
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"  ; - must be last
+                          "(\\<\\([0-9A-Za-z_]+\\))"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match "\\1\\2\\3" nil nil out)))
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"  ; - must be last
+                          "\\$clog2\\s *(\\<\\([0-9]+\\))"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat
+                        (match-string 1 out)
+                        (int-to-string (verilog-clog2 (string-to-number (match-string 2 out))))
+                        (match-string 3 out))
+                       nil nil out)))
+          ;; For precedence do *,/ before +,-,>>,<<
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"
+                          "\\([0-9]+\\)\\s *\\([*/]\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat (match-string 1 out)
+                               (if (equal (match-string 3 out) "/")
+                                   (int-to-string (/ (string-to-number (match-string 2 out))
+                                                     (string-to-number (match-string 4 out)))))
+                               (if (equal (match-string 3 out) "*")
+                                   (int-to-string (* (string-to-number (match-string 2 out))
+                                                     (string-to-number (match-string 4 out)))))
+                               (match-string 5 out))
+                       nil nil out)))
+          ;; Next precedence is +,-
+          (while (string-match
+                  (concat "\\([[({:<>+-]\\)"  ; No *,/ here as higher prec
+                          "\\([0-9]+\\)\\s *\\([---+]\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:<>+-]\\)")
+                  out)
+            (let ((pre (match-string 1 out))
+                  (lhs (string-to-number (match-string 2 out)))
+                  (rhs (string-to-number (match-string 4 out)))
+                  (post (match-string 5 out))
+                  val)
+              (when (equal pre "-")
+                (setq lhs (- lhs)))
+              (setq val (if (equal (match-string 3 out) "-")
+                            (- lhs rhs)
+                          (+ lhs rhs))
+                    out (replace-match
+                         (concat (if (and (equal pre "-")
+                                          (< val 0))
+                                     ""  ; Not "--20" but just "-20"
+                                   pre)
+                                 (int-to-string val)
+                                 post)
+                         nil nil out)) ))
+          ;; Next precedence is >>,<<
+          (while (string-match
+                  (concat "\\([[({:]\\)"  ;; No << as not transitive
+                          "\\([0-9]+\\)\\s *\\([<]\\{2,3\\}\\|[>]\\{2,3\\}\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:<>]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat (match-string 1 out)
+                               (if (equal (match-string 3 out) ">>")
+                                   (int-to-string (lsh (string-to-number (match-string 2 out))
+                                                       (* -1 (string-to-number (match-string 4 out))))))
+                               (if (equal (match-string 3 out) "<<")
+                                   (int-to-string (lsh (string-to-number (match-string 2 out))
+                                                       (string-to-number (match-string 4 out)))))
+                               (if (equal (match-string 3 out) ">>>")
+                                   (int-to-string (ash (string-to-number (match-string 2 out))
+                                                       (* -1 (string-to-number (match-string 4 out))))))
+                               (if (equal (match-string 3 out) "<<<")
+                                   (int-to-string (ash (string-to-number (match-string 2 out))
+                                                       (string-to-number (match-string 4 out)))))
+                               (match-string 5 out))
+                       nil nil out)))))
       out)))
 
 ;;(verilog-simplify-range-expression "[1:3]")  ; 1
@@ -10675,6 +10720,8 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[$clog2(2)]")  ; 1
 ;;(verilog-simplify-range-expression "[$clog2(7)]")  ; 3
 ;;(verilog-simplify-range-expression "[(TEST[1])-1:0]")
+;;(verilog-simplify-range-expression "[1<<2:8>>2]")  ; [4:2]
+;;(verilog-simplify-range-expression "[2*4/(4-2) +2+4 <<4 >>2]")
 
 (defun verilog-clog2 (value)
   "Compute $clog2 - ceiling log2 of VALUE."
@@ -13601,35 +13648,35 @@ Finally, an AUTOASCIIENUM command is used.
 
 An example:
 
-	//== State enumeration
-	parameter [2:0] // auto enum state_info
-			   SM_IDLE =  3\\='b000,
-			   SM_SEND =  3\\='b001,
-			   SM_WAIT1 = 3\\='b010;
-	//== State variables
-	reg [2:0]  /* auto enum state_info */
-		   state_r;  /* auto state_vector state_r */
-	reg [2:0]  /* auto enum state_info */
-		   state_e1;
+  //== State enumeration
+  parameter [2:0] // auto enum state_info
+         SM_IDLE =  3\\='b000,
+         SM_SEND =  3\\='b001,
+         SM_WAIT1 = 3\\='b010;
+  //== State variables
+  reg [2:0]  /* auto enum state_info */
+       state_r;  /* auto state_vector state_r */
+  reg [2:0]  /* auto enum state_info */
+       state_e1;
 
-	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
+  /*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
 
 Typing \\[verilog-auto] will make this into:
 
-	... same front matter ...
+  ... same front matter ...
 
-	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
-	// Beginning of automatic ASCII enum decoding
-	reg [39:0]		state_ascii_r;		// Decode of state_r
-	always @(state_r) begin
-	   case ({state_r})
-		SM_IDLE:  state_ascii_r = \"idle \";
-		SM_SEND:  state_ascii_r = \"send \";
-		SM_WAIT1: state_ascii_r = \"wait1\";
-		default:  state_ascii_r = \"%Erro\";
-	   endcase
-	end
-	// End of automatics"
+  /*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
+  // Beginning of automatic ASCII enum decoding
+  reg [39:0]		state_ascii_r;		// Decode of state_r
+  always @(state_r) begin
+     case ({state_r})
+    SM_IDLE:  state_ascii_r = \"idle \";
+    SM_SEND:  state_ascii_r = \"send \";
+    SM_WAIT1: state_ascii_r = \"wait1\";
+    default:  state_ascii_r = \"%Erro\";
+     endcase
+  end
+  // End of automatics"
   (save-excursion
     (let* ((params (verilog-read-auto-params 2 4))
            (undecode-name (nth 0 params))
@@ -13798,22 +13845,22 @@ The hooks `verilog-before-auto-hook' and `verilog-auto-hook' are
 called before and after this function, respectively.
 
 For example:
-	module ModuleName (/*AUTOARG*/);
-	/*AUTOINPUT*/
-	/*AUTOOUTPUT*/
-	/*AUTOWIRE*/
-	/*AUTOREG*/
-	InstMod instName #(/*AUTOINSTPARAM*/) (/*AUTOINST*/);
+  module ModuleName (/*AUTOARG*/);
+  /*AUTOINPUT*/
+  /*AUTOOUTPUT*/
+  /*AUTOWIRE*/
+  /*AUTOREG*/
+  InstMod instName #(/*AUTOINSTPARAM*/) (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
-	emacs --batch  <filenames.v>  -f verilog-batch-auto
+  emacs --batch  <filenames.v>  -f verilog-batch-auto
 Or fix indentation with:
-	emacs --batch  <filenames.v>  -f verilog-batch-indent
+  emacs --batch  <filenames.v>  -f verilog-batch-indent
 Likewise, you can delete or inject AUTOs with:
-	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto
-	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto
+  emacs --batch  <filenames.v>  -f verilog-batch-delete-auto
+  emacs --batch  <filenames.v>  -f verilog-batch-inject-auto
 Or check if AUTOs have the same expansion
-	emacs --batch  <filenames.v>  -f verilog-batch-diff-auto
+  emacs --batch  <filenames.v>  -f verilog-batch-diff-auto
 
 Using \\[describe-function], see also:
     `verilog-auto-arg'          for AUTOARG module instantiations
