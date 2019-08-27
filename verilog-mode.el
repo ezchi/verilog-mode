@@ -152,12 +152,6 @@
   (interactive)
   (customize-apropos "font-lock-*" 'faces))
 
-(defun verilog-booleanp (value)
-  "Return t if VALUE is boolean.
-This implements GNU Emacs 22.1's `booleanp' function in earlier Emacs.
-This function may be removed when Emacs 21 is no longer supported."
-  (or (equal value t) (equal value nil)))
-
 (defun verilog-insert-last-command-event ()
   "Insert the `last-command-event'."
   (insert last-command-event))
@@ -222,7 +216,7 @@ entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
   :type 'boolean
   :group 'verilog-mode-indent)
 ;; Note we don't use :safe, as that would break on Emacsen before 22.0.
-(put 'verilog-highlight-translate-off 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-translate-off 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-lineup 'declarations
   "Type of statements to lineup across multiple lines.
@@ -290,7 +284,7 @@ If non nil, treat as:
   output       c;"
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-indent-declaration-macros 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-indent-declaration-macros 'safe-local-variable 'booleanp)
 
 (defcustom verilog-indent-lists t
   "How to treat indenting items in a list.
@@ -303,7 +297,7 @@ If nil, treat as:
      reset ) begin"
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-indent-lists 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-indent-lists 'safe-local-variable 'booleanp)
 
 (defcustom verilog-indent-level-behavioral 3
   "Absolute indentation of first begin in a task or function block.
@@ -335,40 +329,40 @@ Set to 0 to have all directives start at the left side of the screen."
   "Non-nil means automatically newline after semicolons."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-auto-newline 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-newline 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-indent-on-newline t
   "Non-nil means automatically indent line after newline."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-auto-indent-on-newline 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-indent-on-newline 'safe-local-variable 'booleanp)
 
 (defcustom verilog-tab-always-indent t
   "Non-nil means TAB should always re-indent the current line.
 A nil value means TAB will only reindent when at the beginning of the line."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-tab-always-indent 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-tab-always-indent 'safe-local-variable 'booleanp)
 
 (defcustom verilog-tab-to-comment nil
   "Non-nil means TAB moves to the right hand column in preparation for a comment."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-tab-to-comment 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-tab-to-comment 'safe-local-variable 'booleanp)
 
 (defcustom verilog-indent-begin-after-if t
   "Non-nil means indent begin statements following if, else, while, etc.
 Otherwise, line them up."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-indent-begin-after-if 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-indent-begin-after-if 'safe-local-variable 'booleanp)
 
 (defcustom verilog-align-ifelse nil
   "Non-nil means align `else' under matching `if'.
 Otherwise else is lined up with first character on line holding matching if."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-align-ifelse 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-align-ifelse 'safe-local-variable 'booleanp)
 
 (defcustom verilog-minimum-comment-distance 10
   "Minimum distance (in lines) between begin and end required before a comment.
@@ -387,7 +381,7 @@ IEEE-1800 standard.  Note that changing this will require restarting Emacs
 to see the effect as font color choices are cached by Emacs."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-p1800-keywords 'safe-local-variable 'booleanp)
 
 (defcustom verilog-highlight-grouping-keywords nil
   "Non-nil means highlight grouping keywords more dramatically.
@@ -397,7 +391,7 @@ Some find that special highlighting on these grouping constructs
 allow the structure of the code to be understood at a glance."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-highlight-grouping-keywords 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-grouping-keywords 'safe-local-variable 'booleanp)
 
 (defcustom verilog-highlight-modules nil
   "Non-nil means highlight module statements for `verilog-load-file-at-point'.
@@ -406,7 +400,7 @@ module definition.  If false, this is not supported.  Setting
 this is experimental, and may lead to bad performance."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-highlight-modules 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-modules 'safe-local-variable 'booleanp)
 
 (defcustom verilog-highlight-includes t
   "Non-nil means highlight module statements for `verilog-load-file-at-point'.
@@ -414,7 +408,7 @@ When true, mousing over include file names will allow jumping to the
 file referenced.  If false, this is not supported."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-highlight-includes 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-includes 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-declare-nettype nil
   "Non-nil specifies the data type to use with `verilog-auto-input' etc.
@@ -431,7 +425,7 @@ mode is experimental."
   :version "25.1"
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-wire-comment 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-wire-comment 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-wire-type nil
   "Non-nil specifies the data type to use with `verilog-auto-wire' etc.
@@ -449,14 +443,14 @@ containing SystemVerilog cells."
 The name of the function or case will be set between the braces."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-endcomments 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-delete-trailing-whitespace nil
   "Non-nil means to `delete-trailing-whitespace' in `verilog-auto'."
   :version "24.1"  ; rev703
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-delete-trailing-whitespace 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-delete-trailing-whitespace 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-ignore-concat nil
   "Non-nil means ignore signals in {...} concatenations for AUTOWIRE etc.
@@ -466,7 +460,7 @@ for backward compatibility only and not set in new designs; it
 may be removed in future versions."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-ignore-concat 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-ignore-concat 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-read-includes nil
   "Non-nil means to automatically read includes before AUTOs.
@@ -476,7 +470,7 @@ but can result in very slow reading times if there are many or large
 include files."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-read-includes 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-read-includes 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-save-policy nil
   "Non-nil indicates action to take when saving a Verilog buffer with AUTOs.
@@ -497,7 +491,7 @@ They will be expanded in the same way as if there was an AUTOINST in the
 instantiation.  See also `verilog-auto-star' and `verilog-auto-star-save'."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-star-expand 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-star-expand 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-star-save nil
   "Non-nil means save to disk SystemVerilog .* instance expansions.
@@ -508,7 +502,7 @@ Instead of setting this, you may want to use /*AUTOINST*/, which will
 always be saved."
   :group 'verilog-mode-actions
   :type 'boolean)
-(put 'verilog-auto-star-save 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-star-save 'safe-local-variable 'booleanp)
 
 (defvar verilog-auto-update-tick nil
   "Modification tick at which autos were last performed.")
@@ -624,7 +618,7 @@ If nil, only inputs that are NOT output signals in the same block are
 included."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-sense-include-inputs 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-sense-include-inputs 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-sense-defines-constant nil
   "Non-nil means AUTOSENSE should assume all defines represent constants.
@@ -633,7 +627,7 @@ maintain compatibility with other sites, this should be set at the bottom
 of each Verilog file that requires it, rather than being set globally."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-sense-defines-constant 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-sense-defines-constant 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-simplify-expressions t
   "Non-nil means AUTOs will simplify expressions when calculating bit ranges.
@@ -645,7 +639,7 @@ file that requires it, rather than being set globally."
   :version "27.1"
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-simplify-expressions 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-simplify-expressions 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-reset-blocking-in-non t
   "Non-nil means AUTORESET will reset blocking statements.
@@ -660,7 +654,7 @@ those temporaries reset.  See example in `verilog-auto-reset'."
   :version "24.1"  ; rev718
   :type 'boolean
   :group 'verilog-mode-auto)
-(put 'verilog-auto-reset-blocking-in-non 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-reset-blocking-in-non 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-reset-widths t
   "True means AUTORESET should determine the width of signals.
@@ -709,7 +703,7 @@ it's bad practice to rely on order based instantiations anyhow.
 See also `verilog-auto-inst-sort'."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-arg-sort 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-arg-sort 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-dot-name nil
   "Non-nil means when creating ports with AUTOINST, use .name syntax.
@@ -719,7 +713,7 @@ simulators.  Setting `verilog-auto-inst-vector' to nil may also
 be desirable to increase how often .name will be used."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-dot-name 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-dot-name 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-param-value nil
   "Non-nil means AUTOINST will replace parameters with the parameter value.
@@ -781,7 +775,7 @@ This second expansion of parameter types can be overridden with
 `verilog-auto-inst-param-value-type'."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-param-value 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-param-value 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-param-value-type t
   "Non-nil means expand parameter type in instantiations.
@@ -791,7 +785,7 @@ See `verilog-auto-inst-param-value'."
   :version "25.1"
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-param-value-type 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-param-value-type 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-sort nil
   "Non-nil means AUTOINST signals will be sorted, not in declaration order.
@@ -804,7 +798,7 @@ See also `verilog-auto-arg-sort'."
   :version "24.1"  ; rev688
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-sort 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-sort 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-vector t
   "Non-nil means when creating default ports with AUTOINST, use bus subscripts.
@@ -814,7 +808,7 @@ declare the wire to have the subscripts removed.)  Setting this to nil may
 speed up some simulators, but is less general and harder to read, so avoid."
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-vector 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-vector 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-inst-template-numbers nil
   "If true, when creating templated ports with AUTOINST, add a comment.
@@ -844,7 +838,7 @@ won't merge conflict."
   :version "24.3"  ; rev773, default change rev815
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-interfaced-ports 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-inst-interfaced-ports 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-input-ignore-regexp nil
   "If non-nil, when creating AUTOINPUT, ignore signals matching this regexp.
@@ -868,12 +862,11 @@ See the \\[verilog-faq] for examples on using this."
 (put 'verilog-auto-output-ignore-regexp 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-template-warn-unused nil
-  "Non-nil means report warning if an AUTO_TEMPLATE line is not used.
-This feature is not supported before Emacs 21.1 or XEmacs 21.4."
+  "Non-nil means report warning if an AUTO_TEMPLATE line is not used."
   :version "24.3"  ; rev787
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-template-warn-unused 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-template-warn-unused 'safe-local-variable 'booleanp)
 
 (defcustom verilog-auto-tieoff-declaration "wire"
   "Data type used for the declaration for AUTOTIEOFF.
@@ -904,7 +897,7 @@ This variable is t for backward compatibility; nil is suggested."
   :version "24.4"
   :group 'verilog-mode
   :type 'boolean)
-(put 'verilog-case-fold 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-case-fold 'safe-local-variable 'booleanp)
 
 (defcustom verilog-typedef-regexp nil
   "If non-nil, regular expression that matches Verilog-2001 typedef names.
@@ -1025,14 +1018,9 @@ If set will become buffer local.")
     (define-key map "\C-c/"    'verilog-star-comment)
     (define-key map "\C-c\C-c" 'verilog-comment-region)
     (define-key map "\C-c\C-u" 'verilog-uncomment-region)
-    (when (featurep 'xemacs)
-      (define-key map [(meta control h)] 'verilog-mark-defun)
-      (define-key map "\M-\C-a"  'verilog-beg-of-defun)
-      (define-key map "\M-\C-e"  'verilog-end-of-defun))
     (define-key map "\C-c\C-d" 'verilog-goto-defun)
     (define-key map "\C-c\C-k" 'verilog-delete-auto)
     (define-key map "\C-c\C-a" 'verilog-auto)
-    (define-key map "\C-c\C-s" 'verilog-auto-save-compile)
     (define-key map "\C-c\C-z" 'verilog-inject-auto)
     (define-key map "\C-c\C-e" 'verilog-expand-vector)
     (define-key map "\C-c\C-h" 'verilog-header)
@@ -1074,8 +1062,6 @@ If set will become buffer local.")
      "----"
      ["Compile"				compile
       :help		"Perform compilation-action (above) on the current buffer"]
-     ["AUTO, Save, Compile"		verilog-auto-save-compile
-      :help		"Recompute AUTOs, save buffer, and compile"]
      ["Next Compile Error"		next-error
       :help		"Visit next compilation error message and corresponding source code"]
      ["Ignore Lint Warning at point"	verilog-lint-off
@@ -1478,33 +1464,6 @@ be substituted."
       (set (make-local-variable 'verilog-compile-command-post-mod)
            compile-command))))
 
-(if (featurep 'xemacs)
-    ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
-    (defun verilog-error-regexp-add-xemacs ()
-      "Teach XEmacs about verilog errors.
-Called by `compilation-mode-hook'.  This allows \\[next-error] to
-find the errors."
-      (interactive)
-      (if (boundp 'compilation-error-regexp-systems-alist)
-          (if (and
-               (not (equal compilation-error-regexp-systems-list 'all))
-               (not (member compilation-error-regexp-systems-list 'verilog)))
-              (push 'verilog compilation-error-regexp-systems-list)))
-      (if (boundp 'compilation-error-regexp-alist-alist)
-          (if (not (assoc 'verilog compilation-error-regexp-alist-alist))
-              (setcdr compilation-error-regexp-alist-alist
-                      (cons verilog-error-regexp-xemacs-alist
-                            (cdr compilation-error-regexp-alist-alist)))))
-      (if (boundp 'compilation-font-lock-keywords)
-          (progn
-            (set (make-local-variable 'compilation-font-lock-keywords)
-                 verilog-error-font-lock-keywords)
-            (font-lock-set-defaults)))
-      ;; Need to re-run compilation-error-regexp builder
-      (if (fboundp 'compilation-build-compilation-error-regexp-alist)
-          (compilation-build-compilation-error-regexp-alist))
-      ))
-
 ;; Following code only gets called from compilation-mode-hook on Emacs to add error handling.
 (defun verilog-error-regexp-add-emacs ()
   "Tell Emacs compile that we are Verilog.
@@ -1518,9 +1477,6 @@ find the errors."
          (push (car item) compilation-error-regexp-alist)
          (push item compilation-error-regexp-alist-alist))
        verilog-error-regexp-emacs-alist))))
-
-(if (featurep 'xemacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-xemacs))
-(if (featurep 'emacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-emacs))
 
 (defconst verilog-compiler-directives
   (eval-when-compile
@@ -2539,16 +2495,9 @@ find the errors."
     (modify-syntax-entry ?\' "." table)
 
     ;; Set up TABLE to handle block and line style comments.
-    (if (featurep 'xemacs)
-        (progn
-          ;; XEmacs (formerly Lucid) has the best implementation
-          (modify-syntax-entry ?/  ". 1456" table)
-          (modify-syntax-entry ?*  ". 23"   table)
-          (modify-syntax-entry ?\n "> b"    table))
-      ;; Emacs does things differently, but we can work with it
-      (modify-syntax-entry ?/  ". 124b" table)
-      (modify-syntax-entry ?*  ". 23"   table)
-      (modify-syntax-entry ?\n "> b"    table))
+    (modify-syntax-entry ?/  ". 124b" table)
+    (modify-syntax-entry ?*  ". 23"   table)
+    (modify-syntax-entry ?\n "> b"    table)
     table)
   "Syntax table used in Verilog mode buffers.")
 
@@ -3404,12 +3353,6 @@ Key bindings specific to `verilog-mode-map' are:
   (when (boundp 'hack-local-variables-hook)  ; Also modify any file-local-variables
     (add-hook 'hack-local-variables-hook 'verilog-modify-compile-command t))
 
-  ;; Setting up menus
-  (when (featurep 'xemacs)
-    (easy-menu-add verilog-stmt-menu)
-    (easy-menu-add verilog-menu)
-    (setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))
-
   ;; Stuff for GNU Emacs
   (set (make-local-variable 'font-lock-defaults)
        `((verilog-font-lock-keywords
@@ -3428,10 +3371,6 @@ Key bindings specific to `verilog-mode-map' are:
   ;; now hook in 'verilog-highlight-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
   (unless noninteractive  ; Else can't see the result, and change hooks are slow
-    (when (featurep 'xemacs)
-      (make-local-hook 'font-lock-mode-hook)
-      (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
-      (make-local-hook 'after-change-functions))
     (add-hook 'font-lock-mode-hook 'verilog-highlight-buffer t t)
     (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-highlight-buffer t t) ; not in Emacs
     (add-hook 'after-change-functions 'verilog-highlight-region t t))
@@ -3459,27 +3398,6 @@ Key bindings specific to `verilog-mode-map' are:
             'verilog-auto-save-check nil 'local)
   ;; verilog-mode-hook call added by define-derived-mode
   )
-
-;;; Integration with the speedbar
-;;
-
-;; Avoid problems with XEmacs byte-compiles.
-;; For GNU Emacs, the eval-after-load will handle if it isn't loaded yet.
-(when (eval-when-compile (fboundp 'declare-function))
-  (declare-function speedbar-add-supported-extension "speedbar" (extension)))
-
-(defun verilog-speedbar-initialize ()
-  "Initialize speedbar to understand `verilog-mode'."
-  ;; Set Verilog file extensions (extracted from `auto-mode-alist')
-  (let ((mode-alist auto-mode-alist))
-    (while mode-alist
-      (when (eq (cdar mode-alist) 'verilog-mode)
-        (speedbar-add-supported-extension (caar mode-alist)))
-      (setq mode-alist (cdr mode-alist)))))
-
-;; If the speedbar is loaded, execute initialization instructions right away,
-;; otherwise add the initialization instructions to the speedbar loader.
-(eval-after-load "speedbar" '(verilog-speedbar-initialize))
 
 
 ;;; Electric functions:
@@ -3740,15 +3658,7 @@ following code fragment:
   "Mark the current Verilog function (or procedure).
 This puts the mark at the end, and point at the beginning."
   (interactive)
-  (if (featurep 'xemacs)
-      (progn
-        (push-mark)
-        (verilog-end-of-defun)
-        (push-mark)
-        (verilog-beg-of-defun)
-        (if (fboundp 'zmacs-activate-region)
-            (zmacs-activate-region)))
-    (mark-defun)))
+  (mark-defun))
 
 (defun verilog-comment-region (start end)
   ;; checkdoc-params: (start end)
@@ -4806,12 +4716,6 @@ becomes:
       (beginning-of-line)
       (verilog-indent-line))))
 
-(defun verilog-auto-save-compile ()
-  "Update automatics with \\[verilog-auto], save the buffer, and compile."
-  (interactive)
-  (verilog-auto)	; Always do it for safety
-  (save-buffer)
-  (compile compile-command))
 
 
 ;;; Batch:
@@ -4835,8 +4739,7 @@ This lets programs calling batch mode to easily extract error messages."
      (condition-case err
          (progn ,@body)
        (error
-        (error "%%Error: %s%s" (error-message-string err)
-               (if (featurep 'xemacs) "\n" ""))))))  ; XEmacs forgets to add a newline
+        (error "%%Error: %s%s" (error-message-string err))))))
 
 (defun verilog-batch-execute-func (funref &optional no-save)
   "Internal processing of a batch command.
