@@ -1044,15 +1044,6 @@ If set will become buffer local.")
   verilog-menu verilog-mode-map "Menu for Verilog mode"
   (verilog-easy-menu-filter
    `("Verilog"
-     ("Choose Compilation Action"
-      ["None"
-       (progn
-         (setq verilog-tool nil)
-         (verilog-set-compile-command))
-       :style radio
-       :selected (equal verilog-tool nil)
-       :help "When invoking compilation, use compile-command"]
-      )
      ("Move"
       ["Beginning of function"		verilog-beg-of-defun
        :keys "C-M-a"
@@ -1446,50 +1437,6 @@ To call on \\[verilog-auto], set `verilog-auto-delete-trailing-whitespace'."
 
 (defvar compile-command)
 (defvar create-lockfiles)  ; Emacs 24
-
-;; compilation program
-(defun verilog-set-compile-command ()
-  "Function to compute shell command to compile Verilog.
-
-This reads `verilog-tool' and sets `compile-command'.  This specifies the
-program that executes when you type \\[compile] or
-\\[verilog-auto-save-compile].
-
-By default `verilog-tool' uses a Makefile if one exists in the
-current directory.  If not, it is set to the `verilog-linter',
-`verilog-compiler', `verilog-coverage', `verilog-preprocessor',
-or `verilog-simulator' variables, as selected with the Verilog ->
-\"Choose Compilation Action\" menu.
-
-You should set `verilog-tool' or the other variables to the path and
-arguments for your Verilog simulator.  For example:
-    \"vcs -p123 -O\"
-or a string like:
-    \"(cd /tmp; surecov %s)\".
-
-In the former case, the path to the current buffer is concat'ed to the
-value of `verilog-tool'; in the later, the path to the current buffer is
-substituted for the %s.
-
-Where __FLAGS__ appears in the string `verilog-current-flags'
-will be substituted.
-
-Where __FILE__ appears in the string, the variable
-`buffer-file-name' of the current buffer, without the directory
-portion, will be substituted."
-  (interactive)
-  (cond
-   ((or (file-exists-p "makefile")	;If there is a makefile, use it
-        (file-exists-p "Makefile"))
-    (set (make-local-variable 'compile-command) "make "))
-   (t
-    (set (make-local-variable 'compile-command)
-         (if verilog-tool
-             (if (string-match "%s" (eval verilog-tool))
-                 (format (eval verilog-tool) (or buffer-file-name ""))
-               (concat (eval verilog-tool) " " (or buffer-file-name "")))
-           ""))))
-  (verilog-modify-compile-command))
 
 (defun verilog-expand-command (command)
   "Replace meta-information in COMMAND and return it.
