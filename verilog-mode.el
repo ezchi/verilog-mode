@@ -907,7 +907,7 @@ See also `verilog-case-fold'."
   :type '(choice (const nil) regexp))
 (put 'verilog-typedef-regexp 'safe-local-variable 'stringp)
 
-(defcustom verilog-mode-hook   'verilog-set-compile-command
+(defcustom verilog-mode-hook nil
   "Hook run after Verilog mode is loaded."
   :type 'hook
   :group 'verilog-mode)
@@ -3349,7 +3349,6 @@ Key bindings specific to `verilog-mode-map' are:
   (set (make-local-variable 'comment-multi-line) nil)
   ;; Set up for compilation
   (setq verilog-which-tool 1)
-  (verilog-set-compile-command)
   (when (boundp 'hack-local-variables-hook)  ; Also modify any file-local-variables
     (add-hook 'hack-local-variables-hook 'verilog-modify-compile-command t))
 
