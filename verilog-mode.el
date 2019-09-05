@@ -1986,9 +1986,6 @@ find the errors."
        "endtask"
        "endgroup"
        "endproperty"
-       "endinterface"
-       "endpackage"
-       "endprogram"
        "endsequence"
        "endclocking"
        ;; OVM
@@ -6096,7 +6093,9 @@ Only look at a few lines to determine indent level."
        (verilog-at-close-constraint-p)
        (verilog-at-close-struct-p))
       (let ((val (if (eq type 'statement)
-                     (- ind verilog-indent-level)
+                     (if (> ind verilog-indent-level)
+                         (- ind verilog-indent-level)
+                       0)
                    ind)))
         (indent-line-to val)))
 
