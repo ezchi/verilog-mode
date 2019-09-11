@@ -104,7 +104,6 @@
 ;;         verilog-auto-newline             t
 ;;         verilog-indent-on-newline   t
 ;;         verilog-tab-always-indent        t
-;;         verilog-auto-endcomments         t
 ;;         verilog-minimum-comment-distance 40
 ;;         verilog-indent-begin-after-if    t
 ;;         verilog-auto-lineup              'declarations
@@ -2536,10 +2535,6 @@ Variables controlling indentation/edit style:
    otherwise you get:
       if (a)
       begin
- `verilog-auto-endcomments'         (default t)
-   Non-nil means a comment /* ... */ is set after the ends which ends
-   cases, tasks, functions and modules.
-   The type and name of the object will be set between the braces.
  `verilog-minimum-comment-distance' (default 10)
    Minimum distance (in lines) between begin and end required before a comment
    will be inserted.  Setting this variable to zero results in every
@@ -2703,8 +2698,6 @@ With optional ARG, remove existing end of line comments."
             (if (looking-at verilog-auto-end-comment-lines-re)
                 (let ((indent-str (verilog-indent-line)))
                   ;; Maybe we should set some endcomments
-                  (if verilog-auto-endcomments
-                      (verilog-set-auto-endcomments indent-str arg))
                   (end-of-line)
                   (delete-horizontal-space)
                   (if arg
