@@ -2569,38 +2569,6 @@ Some other functions are:
     \\[verilog-insert-block]  Insert begin ... end.
     \\[verilog-star-comment]    Insert /* ... */.
 
-    \\[verilog-sk-always]  Insert an always @(AS) begin .. end block.
-    \\[verilog-sk-begin]  Insert a begin .. end block.
-    \\[verilog-sk-case]  Insert a case block, prompting for details.
-    \\[verilog-sk-for]  Insert a for (...) begin .. end block, prompting for details.
-    \\[verilog-sk-generate]  Insert a generate .. endgenerate block.
-    \\[verilog-sk-header]  Insert a header block at the top of file.
-    \\[verilog-sk-initial]  Insert an initial begin .. end block.
-    \\[verilog-sk-fork]  Insert a fork begin .. end .. join block.
-    \\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block.
-    \\[verilog-sk-ovm-class]  Insert an OVM Class block.
-    \\[verilog-sk-uvm-object]  Insert an UVM Object block.
-    \\[verilog-sk-uvm-component]  Insert an UVM Component block.
-    \\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block.
-    \\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block.
-    \\[verilog-sk-specify]  Insert a specify .. endspecify block.
-    \\[verilog-sk-task]  Insert a task .. begin .. end endtask block.
-    \\[verilog-sk-while]  Insert a while (...) begin .. end block, prompting for details.
-    \\[verilog-sk-casex]  Insert a casex (...) item: begin.. end endcase block, prompting for details.
-    \\[verilog-sk-casez]  Insert a casez (...) item: begin.. end endcase block, prompting for details.
-    \\[verilog-sk-if]  Insert an if (..) begin .. end block.
-    \\[verilog-sk-else-if]  Insert an else if (..) begin .. end block.
-    \\[verilog-sk-comment]  Insert a comment block.
-    \\[verilog-sk-assign]  Insert an assign .. = ..; statement.
-    \\[verilog-sk-function]  Insert a function .. begin .. end endfunction block.
-    \\[verilog-sk-input]  Insert an input declaration, prompting for details.
-    \\[verilog-sk-output]  Insert an output declaration, prompting for details.
-    \\[verilog-sk-state-machine]  Insert a state machine definition, prompting for details.
-    \\[verilog-sk-inout]  Insert an inout declaration, prompting for details.
-    \\[verilog-sk-wire]  Insert a wire declaration, prompting for details.
-    \\[verilog-sk-reg]  Insert a register declaration, prompting for details.
-    \\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module.
-
 All key bindings can be seen in a Verilog-buffer with \\[describe-bindings].
 Key bindings specific to `verilog-mode-map' are:
 
