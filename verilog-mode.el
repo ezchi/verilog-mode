@@ -342,6 +342,12 @@ Otherwise else is lined up with first character on line holding matching if."
   :type 'boolean)
 (put 'verilog-align-ifelse 'safe-local-variable 'booleanp)
 
+(defcustom verilog-align-not-cross-empty-line t
+  "Non-nil means alignment will not cross empty line."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-align-not-cross-empty-line 'safe-local-variable 'booleanp)
+
 (defcustom verilog-minimum-comment-distance 10
   "Minimum distance (in lines) between begin and end required before a comment.
 Setting this variable to zero results in every end acquiring a comment; the
@@ -5503,7 +5509,9 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
             (let* ((start (save-excursion ; BOL of the first line of the assignment block
                             (beginning-of-line)
                             (let ((pt (point)))
-                              (verilog-backward-syntactic-ws)
+                              (if verilog-align-not-cross-empty-line
+                                  (forward-line -1)
+                                (verilog-backward-syntactic-ws))
                               (beginning-of-line)
                               (while (and (not (looking-at regexp1))
                                           (looking-at verilog-assignment-operation-re)
@@ -5515,7 +5523,9 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                    (end (save-excursion ; EOL of the last line of the assignment block
                           (end-of-line)
                           (let ((pt (point))) ; Might be on last line
-                            (verilog-forward-syntactic-ws)
+                            (if verilog-align-not-cross-empty-line
+                                (forward-line 1)
+                              (verilog-forward-syntactic-ws))
                             (beginning-of-line)
                             (while (and
                                     (not (looking-at regexp1))
