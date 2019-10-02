@@ -1511,10 +1511,9 @@ be substituted."
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "{"
        "always" "always_latch" "always_ff" "always_comb"
        "begin" "end"
-       ;; "unique" "priority"
+       "unique" "priority"
        "case" "casex" "casez" "randcase" "endcase"
        "class" "endclass"
        "clocking" "endclocking"
@@ -4206,18 +4205,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                       (t
                        (throw 'nesting 'statement)))))
            ((equal (char-after) ?\})
-            (let (par-pos
-                  (there (verilog-at-close-constraint-p)))
-              (if there  ; we are at the } that closes a constraint.  Find the { that opens it
-                  (progn
-                    (if (> (verilog-in-paren-count) 0)
-                        (forward-char 1))
-                    (setq par-pos (verilog-parenthesis-depth))
-                    (cond (par-pos
-                           (goto-char par-pos)
-                           (forward-char 1))
-                          (t
-                           (backward-char 1)))))))
+            (if (verilog-at-close-constraint-p)
+                (throw 'nesting 'statement)))
+
 
            ((looking-at verilog-beg-block-re-ordered)
             (cond
@@ -4885,46 +4875,13 @@ Return >0 for nested struct."
 
 (defun verilog-at-constraint-p ()
   "If at the { of a constraint or coverpoint definition, return true, moving point to constraint."
-  (if (save-excursion
-        (let ((p (point)))
-          (and
-           (equal (char-after) ?\{)
-           (ignore-errors (forward-list))
-           (progn (backward-char 1)
-                  (verilog-backward-ws&directives)
-                  (and
-                   (or (equal (char-before) ?\{)  ; empty case
-                       (equal (char-before) ?\;)
-                       (equal (char-before) ?\}))
-                   ;; skip what looks like bus repetition operator {#{
-                   (not (string-match "^{\\s-*[0-9a-zA-Z_]+\\s-*{" (buffer-substring p (point)))))))))
-      (progn
-        (let ( (pt (point)) (pass 0))
-          (verilog-backward-ws&directives)
-          (verilog-backward-token)
-          (if (looking-at (concat "\\<constraint\\|coverpoint\\|cross\\|with\\>\\|" verilog-in-constraint-re))
-              (progn (setq pass 1)
-                     (if (looking-at "\\<with\\>")
-                         (progn (verilog-backward-ws&directives)
-                                (beginning-of-line)  ; 1
-                                (verilog-forward-ws&directives)
-                                1 )
-                       (verilog-beg-of-statement)
-                       ))
-            ;; if first word token not keyword, it maybe the instance name
-            ;;   check next word token
-            (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\S-+")
-                (progn (verilog-beg-of-statement)
-                       (if (and
-                            (not (string-match verilog-named-block-re (buffer-substring pt (point)))) ;; Abort if 'begin' keyword is found
-                            (looking-at (concat "\\<\\(constraint\\|"
-                                                "\\(?:\\w+\\s-*:\\s-*\\)?\\(coverpoint\\|cross\\)"
-                                                "\\|with\\)\\>\\|" verilog-in-constraint-re)))
-                           (setq pass 1)))))
-          (if (eq pass 0)
-              (progn (goto-char pt) nil) 1)))
-    ;; not
-    nil))
+  (save-excursion
+    (and
+     (equal (char-after) ?\{)
+     (not (verilog-in-paren))
+     (progn
+       (forward-sexp -2)
+       (thing-at-point-looking-at "constraint")))))
 
 (defun verilog-at-struct-p ()
   "If at the { of a struct, return true, not moving point."
@@ -6115,7 +6072,7 @@ and `verilog-separator-keywords'.)"
 With optional second ARG non-nil, STR is the complete name of the instruction."
   (let ((keywords-prefix "^[ \t]*\\(class\\|function\\|interface\\|module\\|package\\|\\program\\|task\\)[ \t]+\\("))
     (if arg
-      (concat keywords-prefix str "\\)\\>")
+        (concat keywords-prefix str "\\)\\>")
       (concat keywords-prefix str "[a-zA-Z0-9_]*\\)\\>"))))
 
 (defun verilog-comp-defun (verilog-str verilog-pred verilog-flag)
