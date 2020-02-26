@@ -5608,8 +5608,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                         (verilog-in-paren)
                         (not (verilog-in-coverage-p))
                         )
-                       (progn (setq par 1)
-                              (throw 'nesting 'block)))
+                       (if (verilog-at-close-parenthesis-p)
+                           (throw 'nesting 'close-paren)
+                         (throw 'nesting 'block)))
 
                    ;; See if we are continuing a previous line
                    (while t
@@ -5726,6 +5727,8 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       (if (> par 0)			; Unclosed Parenthesis
           (list 'cparenexp par)
         (cond
+         ((eq type 'close-paren)
+          (list type (verilog-current-indent-level)))
          ((eq type 'case)
           (list type (verilog-case-indent-level)))
          ((eq type 'statement)
@@ -6483,6 +6486,11 @@ Return >0 for nested struct."
           (progn (goto-char pt) nil))
       (progn (goto-char pt) nil))))
 
+(defun verilog-at-close-parenthesis-p ()
+  "If at the ) that cloeses a parenthesis, return true."
+  (and (equal (char-after) ?\))
+       (verilog-in-paren)))
+
 (defun verilog-at-close-struct-p ()
   "If at the } that closes a struct, return true."
   (if (and
@@ -6649,6 +6657,9 @@ Only look at a few lines to determine indent level."
   (let ((type (car indent-str))
         (ind (car (cdr indent-str))))
     (cond
+     (; close parenthesis
+      (eq type 'close-paren)
+      (indent-line-to ind))
      (; handle continued exp
       (eq type 'cexp)
       (let ((here (point)))
