@@ -7014,47 +7014,54 @@ Be verbose about progress unless optional QUIET set."
               (forward-line 1))
             (unless quiet (message "")))))))
 
+(defun verilog-expr-boundry-p ()
+  (save-excursion
+    (back-to-indentation)
+    (or (verilog-in-comment-p)
+        (looking-at-p verilog-basic-complete-re)
+        (looking-at-p verilog-extended-complete-re)
+        (looking-at-p verilog-end-block-re)
+        (looking-at-p "\\s-*$"))))
+
 (defun verilog-pretty-expr (&optional quiet)
   "Line up expressions around point.
 If QUIET is non-nil, do not print messages showing the progress of line-up."
   (interactive)
   (unless (verilog-in-comment-or-string-p)
     (save-excursion
-      (let ((regexp (concat "^\\s-*" verilog-complete-reg))
-            (regexp1 (concat "^\\s-*" verilog-basic-complete-re)))
-        (beginning-of-line)
-        (when (and (not (looking-at regexp))
-                   (looking-at verilog-assignment-operation-re)
-                   (save-excursion
-                     (goto-char (match-end 2))
-                     (and (not (verilog-in-attribute-p))
-                          (not (verilog-in-parameter-p))
-                          (not (verilog-in-comment-or-string-p)))))
+      (beginning-of-line)
+      (when (and (not (verilog-expr-boundry-p))
+                 (looking-at verilog-assignment-operation-re)
+                 (save-excursion
+                   (goto-char (match-end 2))
+                   (and (not (verilog-in-attribute-p))
+                        (not (verilog-in-parameter-p))
+                        (not (verilog-in-comment-or-string-p)))))
           (let* ((start (save-excursion ; BOL of the first line of the assignment block
                           (beginning-of-line)
                           (let ((pt (point)))
-                            (verilog-backward-syntactic-ws)
+                            (forward-line -1)
                             (beginning-of-line)
-                            (while (and (not (looking-at regexp1))
+                            (while (and (not (verilog-expr-boundry-p))
                                         (looking-at verilog-assignment-operation-re)
                                         (not (bobp)))
                               (setq pt (point))
-                              (verilog-backward-syntactic-ws)
+                              (forward-line -1)
                               (beginning-of-line)) ; Ack, need to grok `define
                             pt)))
                  (end (save-excursion ; EOL of the last line of the assignment block
                         (end-of-line)
                         (let ((pt (point))) ; Might be on last line
-                          (verilog-forward-syntactic-ws)
+                          (forward-line)
                           (beginning-of-line)
                           (while (and
-                                  (not (looking-at regexp1))
+                                  (not (verilog-expr-boundry-p))
                                   (looking-at verilog-assignment-operation-re)
                                   (progn
                                     (end-of-line)
                                     (not (eq pt (point)))))
                             (setq pt (point))
-                            (verilog-forward-syntactic-ws)
+                            (forward-line)
                             (beginning-of-line))
                           pt)))
                  (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end)))
@@ -7104,7 +7111,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                   (forward-line -1)))
                 (forward-line 1))
               (unless quiet
-                (message "")))))))))
+                (message ""))))))))
 
 (defun verilog-just-one-space (myre)
   "Remove extra spaces around regular expression MYRE."
