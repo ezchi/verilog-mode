@@ -5758,8 +5758,10 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                         (verilog-in-paren)
                         (not (verilog-in-coverage-p))
                         )
-                       (progn (setq par 1)
-                              (throw 'nesting 'block)))
+                       (if (verilog-at-paren-close-p)
+                           (throw 'nesting 'paren-close)
+                         (progn (setq par 1)
+                                (throw 'nesting 'block))))
 
                    ;; See if we are continuing a previous line
                    (while t
@@ -6521,6 +6523,15 @@ Always starts from `point-min', to allow inserts with hooks disabled."
   (let ((state (save-excursion (parse-partial-sexp (point-min) (point)))))
     (> (nth 0 state) 0 )))
 
+(defun verilog-at-paren-close-p ()
+  "Return true if at the close of parentheses."
+  (interactive)
+  (let ((state (save-excursion (verilog-syntax-ppss))))
+    (save-excursion
+      (back-to-indentation)
+      (when (verilog-in-paren)
+        (memq (char-after) '(?\) ?\}))))))
+
 (defun verilog-in-struct-p ()
   "Return true if in a struct declaration."
   (interactive)
@@ -6812,6 +6823,8 @@ Only look at a few lines to determine indent level."
   (let ((type (car indent-str))
 	(ind (car (cdr indent-str))))
     (cond
+     ((eq type 'paren-close)
+      (indent-line-to (verilog-current-indent-level)))
      (; handle continued exp
       (eq type 'cexp)
       (let ((here (point)))
@@ -6880,10 +6893,19 @@ Only look at a few lines to determine indent level."
 		     (verilog-backward-up-list 1)
 		     (forward-char 1)
                      (if verilog-indent-lists
-                         (skip-chars-forward " \t")
-                       (verilog-forward-syntactic-ws))
-                     (setq here (point))
-                     (current-column)))
+                         (progn
+                           (skip-chars-forward " \t")
+                           (if (eolp)
+                               (progn
+                                 (setq here (point))
+                                 (+ (current-indentation) verilog-indent-level))
+                             (progn
+                               (setq here (point))
+                               (current-column))))
+                       (progn
+                         (verilog-forward-syntactic-ws)
+                         (setq here (point))
+                         (current-column)))))
 
 	      (decl (save-excursion
 		      (goto-char here)
