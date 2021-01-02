@@ -1,4 +1,8 @@
-name: CI
+name: test
+
+env:
+  VERILOGMODE_SKIP_MAKELOG: 1
+  VERILOGMODE_AUTHOER_SIZE: 1
 
 # Controls when the action will run.
 on:
@@ -28,7 +32,4 @@ jobs:
         run: sudo apt-get install emacs
       # Runs a single command using the runners shell
       - name: GNU Emacs Test
-        with:
-          VERILOGMODE_SKIP_MAKELOG: 1
-          VERILOGMODE_AUTHOER_SIZE: 1
         run: make test_emacs
