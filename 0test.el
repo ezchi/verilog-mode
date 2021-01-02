@@ -30,18 +30,6 @@
     (message (concat file ": deleting indent..."))
     (global-replace-regexp "[ \t]+$" "")
 
-    (message (concat file ": deleting autos..."))
-    (verilog-delete-auto)
-
-    (cond
-     ((string-match "^inject_" file)
-      (message (concat file ": testing inject-auto..."))
-      (verilog-inject-auto))
-     (t
-      (message (concat file ": testing auto..."))
-      (verilog-auto)))
-    (message (concat file ": auto OK..."))
-
     (when (string-match "^label_" file)
       (message (concat file ": testing auto labeling of begin/end..."))
       (verilog-label-be))
