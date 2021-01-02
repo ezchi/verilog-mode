@@ -7222,6 +7222,9 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                             (beginning-of-line)
                             (while (and (not (looking-at regexp1))
                                         (looking-at verilog-assignment-operation-re)
+                                        (save-excursion
+                                          (goto-char (match-end 2))
+                                          (not (verilog-in-paren)))
                                         (not (bobp)))
                               (setq pt (point))
                               (verilog-backward-syntactic-ws)
