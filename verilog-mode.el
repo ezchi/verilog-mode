@@ -7218,7 +7218,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
           (let* ((start (save-excursion ; BOL of the first line of the assignment block
                           (beginning-of-line)
                           (let ((pt (point)))
-                            (verilog-backward-syntactic-ws)
+                            (forward-line -1)
                             (beginning-of-line)
                             (while (and (not (looking-at regexp1))
                                         (looking-at verilog-assignment-operation-re)
@@ -7227,13 +7227,13 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                                           (not (verilog-in-paren)))
                                         (not (bobp)))
                               (setq pt (point))
-                              (verilog-backward-syntactic-ws)
+                              (forward-line -1)
                               (beginning-of-line)) ; Ack, need to grok `define
                             pt)))
                  (end (save-excursion ; EOL of the last line of the assignment block
                         (end-of-line)
                         (let ((pt (point))) ; Might be on last line
-                          (verilog-forward-syntactic-ws)
+                          (forward-line)
                           (beginning-of-line)
                           (while (and
                                   (not (looking-at regexp1))
@@ -7242,7 +7242,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                                     (end-of-line)
                                     (not (eq pt (point)))))
                             (setq pt (point))
-                            (verilog-forward-syntactic-ws)
+                            (forward-line)
                             (beginning-of-line))
                           pt)))
                  (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end)))
