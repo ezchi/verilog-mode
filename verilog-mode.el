@@ -5186,7 +5186,7 @@ primitive or interface named NAME."
                     (if kill-existing-comment
                         (verilog-kill-existing-comment))
                     (delete-horizontal-space)
-                    (insert (concat " // " string ))))
+                    (insert (concat " : " string ))))
 
                  (;  - this is end{function,generate,task,module,primitive,table,generate}
                   ;; - which can not be nested.
@@ -5254,7 +5254,7 @@ primitive or interface named NAME."
                           (ding 't)
                           (setq string "unmatched end(function|task|module|connectmodule|primitive|interface|package|class|clocking)")))))
                     (end-of-line)
-                    (insert (concat " // " string )))
+                    (insert (concat " : " string )))
                   ))))))))))
 
 (defun verilog-get-expr()
