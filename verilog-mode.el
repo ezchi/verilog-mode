@@ -5688,6 +5688,7 @@ This sets up the appropriate Verilog mode environment, calls
   '((block       . (+ ind verilog-indent-level))
     (case        . (+ ind verilog-case-indent))
     (cparenexp   . (+ ind verilog-indent-level))
+    (paren-close . (verilog-calculate-indent-paren-close))
     (cexp        . (+ ind verilog-cexp-indent))
     (defun       . verilog-indent-level-module)
     (declaration . verilog-indent-level-declaration)
@@ -6819,12 +6820,22 @@ Only look at a few lines to determine indent level."
   "Indent for special part of code."
   (verilog-do-indent (verilog-calculate-indent)))
 
+(defun verilog-calculate-indent-paren-close ()
+  "Calculate the indentation of closing parenthesis."
+  (let* ((state (save-excursion (verilog-syntax-ppss)))
+         (paren-open-pos (nth 1 state)))
+    (save-excursion
+      (goto-char paren-open-pos)
+      (current-indentation))))
+
 (defun verilog-do-indent (indent-str)
   (let ((type (car indent-str))
 	(ind (car (cdr indent-str))))
     (cond
-     ((eq type 'paren-close)
-      (indent-line-to (verilog-current-indent-level)))
+     (; handle closing parenthesis
+      (eq type 'paren-close)
+      (indent-line-to (eval (cdr (assoc 'paren-close verilog-indent-alist)))))
+
      (; handle continued exp
       (eq type 'cexp)
       (let ((here (point)))
